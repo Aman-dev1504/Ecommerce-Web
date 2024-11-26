@@ -130,6 +130,17 @@ const config = {
   				'30%, 60%': {
   					'background-position': 'calc(100% + var(--shiny-width)) 0'
   				}
+  			},
+  			shine: {
+  				'0%': {
+  					'background-position': '0% 0%'
+  				},
+  				'50%': {
+  					'background-position': '100% 100%'
+  				},
+  				to: {
+  					'background-position': '0% 0%'
+  				}
   			}
   		},
   		animation: {
@@ -140,7 +151,8 @@ const config = {
   			'shimmer-slide': 'shimmer-slide var(--speed) ease-in-out infinite alternate',
   			'spin-around': 'spin-around calc(var(--speed) * 2) infinite linear',
   			rainbow: 'rainbow var(--speed, 2s) infinite linear',
-  			'shiny-text': 'shiny-text 8s infinite'
+  			'shiny-text': 'shiny-text 8s infinite',
+  			shine: 'shine var(--duration) infinite linear'
   		},
   		backgroundImage: {
   			overlay: 'linear-gradient(180deg, rgba(1,1,1,0.8) 0%, rgba(1,1,1,0) 30%, rgba(0,0,0,0) 90%, rgba(255,255,255,1) 100%)',

@@ -1,11 +1,34 @@
 "use client";
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect } from 'react';
+import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowRight, ArrowRightIcon, ShoppingBag, Star, TrendingUp, Truck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RainbowButton } from './ui/rainbow-button';
+import ShineBorder from './ui/shine-border';
 
+const AnimatedNumber: React.FC<{ value: number, suffix?: string }> = ({ value, suffix = '' }) => {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => {
+    const displayValue = Math.round(latest * 10) / 10;
+    return `${displayValue}${suffix}`;
+  });
+
+  useEffect(() => {
+    const controls = animate(count, value, {
+      duration: 5,
+      ease: 'easeInOut'
+    });
+
+    return controls.stop;
+  }, [count, value]);
+
+  return (
+    <motion.p className="text-2xl font-bold text-primary">
+      {rounded}
+    </motion.p>
+  );
+};
 const Hero = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
@@ -171,15 +194,15 @@ const Hero = () => {
           <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-200/20">
             <div className="grid grid-cols-3 gap-8">
               <div className="text-center">
-                <p className="text-2xl font-bold text-primary">50K+</p>
+                <AnimatedNumber value={50} suffix="K+" />
                 <p className="text-sm text-gray-600">Happy Customers</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-primary">100+</p>
+                <AnimatedNumber value={100} suffix="+" />
                 <p className="text-sm text-gray-600">New Designs</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-primary">4.9</p>
+                <AnimatedNumber value={4.9} />
                 <p className="text-sm text-gray-600">Customer Rating</p>
               </div>
             </div>
