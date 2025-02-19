@@ -4,7 +4,6 @@ import { redis } from "@/lib/redis";
 import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-
 export async function POST(req: Request) {
   const body = await req.text();
 
@@ -40,11 +39,14 @@ export async function POST(req: Request) {
             userId: userId,
             totalPrice: (session.amount_total as number) / 100, // Convert from cents to dollars
             items: {
-              create: cart.items.map((item) => ({
-                quantity: item.quantity,
-                price: item.price,
-                product: { connect: { id: item.id } }, // Assuming you have a product relation
-              })),
+              create: cart.items.map(
+                (item) =>
+                  ({
+                    quantity: item.quantity,
+                    price: item.price,
+                    product: { connect: { id: item.id } }, // Assuming you have a product relation
+                  } as any)
+              ),
             },
           },
         });

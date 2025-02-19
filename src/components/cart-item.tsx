@@ -9,7 +9,7 @@ type Props = {
   id: string;
   name: string;
   price: number;
-  image: string;
+  image: string[];
   quantity: number;
 };
 
@@ -18,7 +18,7 @@ export function CartItem({ item }: { item: Props }) {
     <Card>
       <CardContent className="flex items-center space-x-4 p-4">
         <img
-          src={item.image}
+          src={item.image[0]}
           alt={item.name}
           className="w-24 h-24 object-cover rounded"
         />

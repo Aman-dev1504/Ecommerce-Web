@@ -15,18 +15,17 @@ import CheckoutButton from './checkout-button'
 
 export async function CartComponent() {
 
-const session = await auth()
+  const session = await auth()
 
-if(!session?.user){
+  if (!session?.user) {
     return redirect("/auth/login")
-} 
-const cart: Cart | null = await redis.get(`cart-${session.user.id}`)
+  }
+  const cart: Cart | null = await redis.get(`cart-${session.user.id}`)
+  // console.log(cart)
 
   const totalItems = cart?.items.reduce((total, item) => total + item.quantity, 0) || 0
   const totalPrice = cart?.items.reduce((total, item) => total + item.price * item.quantity, 0) || 0
-//   if(loading){
-//     return <div>loading..</div>
-//   }
+
   return (
     <div className="container mx-auto px-4 pt-4 pb-8">
       <div className="flex items-center mb-8">
@@ -36,7 +35,7 @@ const cart: Cart | null = await redis.get(`cart-${session.user.id}`)
         </Link>
         <h1 className="text-3xl font-bold ml-auto">Your Cart</h1>
       </div>
-      
+
       {(!cart || cart.items.length === 0) ? (
         <Card className="text-center py-16">
           <CardContent>
@@ -74,7 +73,7 @@ const cart: Cart | null = await redis.get(`cart-${session.user.id}`)
                   </div>
                 </div>
                 <form action={checkOut}>
-                <CheckoutButton/>
+                  <CheckoutButton />
                 </form>
               </CardContent>
             </Card>
