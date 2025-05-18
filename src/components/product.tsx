@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart, Heart, Expand } from "lucide-react";
+import { Heart, Expand } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { addItem } from "@/actions/redis";
 
 interface Product {
   id: string;

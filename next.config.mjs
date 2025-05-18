@@ -6,10 +6,6 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "www.ikea.com",
-      },
-      {
-        protocol: "https",
         hostname: "images.unsplash.com",
       },
       {

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from "./product";
-
+import { Loader } from "./Loader"
 const tabs = [
   { id: "casual", label: "Casual" },
   { id: "graphic", label: "Graphic" },
@@ -103,12 +103,15 @@ function PopularProducts() {
             transition={{ duration: 0.2 }}
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
           >
-            {loading
-              ? Array().fill(0).map((_, i) => <ProductCardSkeleton key={i} />)
-              : data.map((product) => (
+            {loading ? (
+              <div className="w-full col-span-full flex justify-center items-center min-h-[200px]">
+                <Loader />
+              </div>
+            ) : (
+              data.map((product) => (
                 <Product key={product.id} product={product} />
               ))
-            }
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

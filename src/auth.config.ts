@@ -1,13 +1,12 @@
 import { compare } from "bcryptjs";
-import NextAuth, { NextAuthConfig } from "next-auth";
+import { NextAuthConfig } from "next-auth";
 import { LoginSchema } from "./zod-schemas";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
+
 import { getUserByEmail } from "./lib/helpers/authHelper";
 
 export default {
   providers: [
-    Google,
     Credentials({
       //   credentials: {
       //     email: {},
@@ -30,5 +29,4 @@ export default {
       },
     }),
   ],
-  
 } satisfies NextAuthConfig;

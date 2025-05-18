@@ -21,25 +21,21 @@ function CardWrapper({
     backButtonhref,
     showSocial
 }: CardWrapperProps) {
-  return (
-    <Card className="md:w-[400px] shadow-md">
-        <CardHeader>
-            <Header label={headerLabel}/>
-        </CardHeader>
-        <CardContent>
-            {children}
-        <Separator className="mt-6"/>
-        </CardContent>
-        {showSocial && (
+    return (
+        <Card className="md:w-[400px] shadow-md">
+            <CardHeader>
+                <Header label={headerLabel} />
+            </CardHeader>
+            <CardContent>
+                {children}
+                <Separator className="mt-6" />
+            </CardContent>
+
             <CardFooter>
-                <Social/>
+                <Backbutton label={backButtonLabel} href={backButtonhref} />
             </CardFooter>
-        )}
-        <CardFooter>
-            <Backbutton label={backButtonLabel} href={backButtonhref} />
-        </CardFooter>
-    </Card>
-  )
+        </Card>
+    )
 }
 
 export default CardWrapper

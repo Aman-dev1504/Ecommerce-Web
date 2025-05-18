@@ -99,8 +99,68 @@ async function main() {
       featured: true,
       isActive: true,
     },
-  ];
 
+    {
+      title: "Eco-Friendly Bamboo Tee",
+      description:
+        "Soft, sustainable t-shirt made from bamboo fibers. Naturally breathable and antibacterial.",
+      price: 32.99,
+      imageUrls: [
+        "https://images.unsplash.com/photo-1593032465171-b1efcb8c5e3d",
+        "https://images.unsplash.com/photo-1571902943202-507ec2618e8c",
+      ],
+      category: "CASUAL",
+      sizes: ["S", "M", "L", "XL"],
+      gender: "UNISEX",
+      featured: false,
+      isActive: true,
+    },
+    {
+      title: "Tie-Dye Summer Tee",
+      description:
+        "Colorful tie-dye t-shirt, perfect for festivals and summer outings. Made from soft cotton.",
+      price: 27.99,
+      imageUrls: [
+        "https://images.unsplash.com/photo-1629385967033-e7a5b60c2556",
+        "https://images.unsplash.com/photo-1618354691330-df0df0995c82",
+      ],
+      category: "GRAPHIC",
+      sizes: ["M", "L", "XL"],
+      gender: "UNISEX",
+      featured: true,
+      isActive: true,
+    },
+    {
+      title: "Slim Fit Henley Tee",
+      description:
+        "Modern henley-style tee with a three-button placket. Ideal for layering or solo wear.",
+      price: 38.99,
+      imageUrls: [
+        "https://images.unsplash.com/photo-1520975698519-59b1d4b8e0c6",
+        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab",
+      ],
+      category: "CASUAL",
+      sizes: ["S", "M", "L"],
+      gender: "MEN",
+      featured: false,
+      isActive: true,
+    },
+    {
+      title: "Seamless Workout Tee",
+      description:
+        "Engineered seamless t-shirt designed to reduce chafing. Stretchable and ideal for performance training.",
+      price: 36.99,
+      imageUrls: [
+        "https://images.unsplash.com/photo-1600185365584-55c8eb4a3561",
+        "https://images.unsplash.com/photo-1600185365527-3a6f6b3df8bb",
+      ],
+      category: "SPORTS",
+      sizes: ["XS", "S", "M", "L", "XL"],
+      gender: "WOMEN",
+      featured: true,
+      isActive: true,
+    },
+  ];
   // Insert data into the database
   for (const product of products) {
     await db.product.create({

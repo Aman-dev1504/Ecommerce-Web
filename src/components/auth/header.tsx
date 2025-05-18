@@ -13,7 +13,7 @@ interface HeaderProps {
 export function Header({ label }: HeaderProps) {
   return (
     <div className="flex w-full flex-col gap-4 items-center justify-center">
-      <h1 className={cn('text-3xl font-semibold', font.className)}>
+      <h1 className={cn(' font-sans text-3xl font-semibold', font.className)}>
         Teeworld
       </h1>
       <p className="text-muted-foreground">
