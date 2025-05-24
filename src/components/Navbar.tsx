@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useTransition } from "react";
 import Container from "@/components/Container";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { TbUserSquareRounded } from "react-icons/tb";
 import Link from "next/link";
 import { logout } from "@/actions/logout";
 import { User } from "next-auth";
@@ -47,7 +46,7 @@ function Navbar({ user, cart }: { user: User; cart: Cart | null }) {
 
   return (
     <motion.header
-      className="fixed w-full z-50"
+      className="fixed w-full z-50 bg-white px-4 sm:px-6 box-border overflow-hidden"
       variants={{
         visible: { y: 0 },
         hidden: { y: "-100%" },
@@ -144,7 +143,7 @@ function Navbar({ user, cart }: { user: User; cart: Cart | null }) {
                   </SheetTrigger>
                   <SheetContent
                     side="right"
-                    className="w-full sm:w-80 p-0 bg-white border-none"
+                    className="w-full max-w-full sm:max-w-sm p-0 bg-white border-none overflow-y-aut"
                   >
                     <motion.div
                       initial={{ opacity: 0, x: 50 }}
