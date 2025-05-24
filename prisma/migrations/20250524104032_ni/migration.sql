@@ -3,9 +3,9 @@
 
   - The values [SOFA,BEDS,CHAIRS,LAMPS] on the enum `Category` will be removed. If these variants are still used in the database, this will fail.
   - You are about to drop the column `imageUrl` on the `Product` table. All the data in the column will be lost.
+  - You are about to drop the column `stock` on the `Product` table. All the data in the column will be lost.
   - The `category` column on the `Product` table would be dropped and recreated. This will lead to data loss if there is data in the column.
   - Added the required column `updatedAt` to the `Product` table without a default value. This is not possible if the table is not empty.
-  - Changed the type of `stock` on the `Product` table. No cast exists, the column would be dropped and recreated, which cannot be done if there is data, since the column is required.
   - Added the required column `color` to the `order_items` table without a default value. This is not possible if the table is not empty.
   - Added the required column `size` to the `order_items` table without a default value. This is not possible if the table is not empty.
   - Added the required column `updatedAt` to the `orders` table without a default value. This is not possible if the table is not empty.
@@ -31,6 +31,7 @@ ALTER TYPE "OrderStatus" ADD VALUE 'PROCESSING';
 
 -- AlterTable
 ALTER TABLE "Product" DROP COLUMN "imageUrl",
+DROP COLUMN "stock",
 ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN     "featured" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN     "gender" "Gender",
@@ -38,8 +39,6 @@ ADD COLUMN     "imageUrls" TEXT[],
 ADD COLUMN     "isActive" BOOLEAN NOT NULL DEFAULT true,
 ADD COLUMN     "sizes" "Size"[],
 ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-DROP COLUMN "stock",
-ADD COLUMN     "stock" JSONB NOT NULL,
 DROP COLUMN "category",
 ADD COLUMN     "category" "Category" NOT NULL DEFAULT 'CASUAL';
 

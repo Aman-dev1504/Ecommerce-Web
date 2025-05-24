@@ -9,6 +9,7 @@ import { Product } from "./product";
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { debounce } from "lodash";
+
 interface Product {
   id: string;
   title: string;
@@ -39,21 +40,11 @@ const priceRanges = [
   { label: "Over $150", value: [150, 1000] },
 ];
 
-interface FilterContentProps {
-  selectedCategories: string[];
-  setSelectedCategories: (selectedCategories: string[]) => void,
-  handleCategoryChange: (categoryId: string) => void;
-  priceRange: [number, number];
-  setPriceRange: (range: [number, number]) => void;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  resetFilters: () => void;
-  isMobile?: boolean;
-  activeFilterCount: number;
-}
-
 export function ProductsPage() {
+  const limit = 9; // number of items per page
+  const [cursor, setCursor] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -61,18 +52,112 @@ export function ProductsPage() {
   const [filterLoading, setFilterLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(true);
 
-  // Memoized filtered products
-  const filteredProducts = useMemo(() => {
-    return products.filter(
-      (product) =>
-        (selectedCategories.length === 0 ||
-          selectedCategories.includes(product.category)) &&
-        product.price >= priceRange[0] &&
-        product.price <= priceRange[1] &&
-        product.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  // Fetch products with pagination
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams();
+      params.append("limit", limit.toString());
+      if (cursor) params.append("cursor", cursor);
+
+      const response = await fetch(`/api/products?${params.toString()}`);
+      if (!response.ok) throw new Error("Failed to fetch products");
+
+      const data = await response.json();
+
+      if (cursor) {
+        // Append new products for pagination
+        setProducts(prev => [...prev, ...data]);
+      } else {
+        // Initial load
+        setProducts(data);
+      }
+
+      // Simple check for more items - might need adjustment based on your API
+      setHasMore(data.length === limit);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [cursor, limit]);
+
+  // Load products on first render and when cursor changes
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Apply filters client-side
+  useEffect(() => {
+    if (products.length === 0) return;
+
+    setFilterLoading(true);
+
+    let result = [...products];
+
+    // Apply category filter
+    if (selectedCategories.length > 0) {
+      result = result.filter(product =>
+        selectedCategories.includes(product.category)
+      );
+    }
+
+    // Apply price range filter
+    if (priceRange[0] !== 0 || priceRange[1] !== 1000) {
+      result = result.filter(product =>
+        product.price >= priceRange[0] && product.price <= priceRange[1]
+      );
+    }
+
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(product =>
+        product.title.toLowerCase().includes(term) ||
+        product.description.toLowerCase().includes(term)
+      );
+    }
+
+    setFilteredProducts(result);
+    setFilterLoading(false);
   }, [products, selectedCategories, priceRange, searchTerm]);
+
+  // Handlers for pagination
+  const handleNext = () => {
+    if (!hasMore) return;
+    setCursor(products[products.length - 1]?.id || null);
+  };
+
+  // Filter handlers
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((c) => c !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const handlePriceRangeChange = (range: [number, number]) => {
+    setPriceRange(range);
+  };
+
+  const resetFilters = () => {
+    setSelectedCategories([]);
+    setPriceRange([0, 1000]);
+    setSearchTerm("");
+  };
+
+  // Debounced search input
+  const debouncedSearch = useCallback(
+    debounce((term: string) => {
+      setSearchTerm(term);
+    }, 500),
+    []
+  );
 
   // Count active filters for badge
   const activeFilterCount = useMemo(() => {
@@ -83,61 +168,7 @@ export function ProductsPage() {
     return count;
   }, [selectedCategories, priceRange, searchTerm]);
 
-  // Debounced search
-  const debouncedSearch = useCallback(
-    debounce((term: string) => {
-      setSearchTerm(term);
-      setFilterLoading(true);
-      setTimeout(() => setFilterLoading(false), 300);
-    }, 500),
-    []
-  );
-
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/products");
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
-      const products = await response.json();
-      setProducts(products);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategories((prev) => {
-      setFilterLoading(true);
-      setTimeout(() => setFilterLoading(false), 300);
-      return prev.includes(categoryId)
-        ? prev.filter((c) => c !== categoryId)
-        : [...prev, categoryId];
-    });
-  };
-
-  const handlePriceRangeChange = (range: [number, number]) => {
-    setPriceRange(range);
-    setFilterLoading(true);
-    setTimeout(() => setFilterLoading(false), 300);
-  };
-
-  const resetFilters = () => {
-    setSelectedCategories([]);
-    setPriceRange([0, 1000]);
-    setSearchTerm("");
-    setFilterLoading(true);
-    setTimeout(() => setFilterLoading(false), 300);
-  };
-
-  if (loading) {
+  if (loading && products.length === 0) {
     return <ProductsPageSkeleton />;
   }
 
@@ -156,6 +187,7 @@ export function ProductsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Header */}
       <div className="flex items-center mb-8">
         <Link
           href="/"
@@ -179,297 +211,214 @@ export function ProductsPage() {
           )}
         </Button>
       </div>
+
+      {/* Filters and Product List */}
       <div className="flex flex-col md:flex-row gap-8 relative">
         {mobileFilterOpen && (
           <div className="md:hidden fixed z-50 inset-0 bg-white p-6 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Filters</h2>
               <div className="flex items-center gap-2">
-                {activeFilterCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={resetFilters}
-                    className="text-sm"
-                  >
-                    Clear all
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setMobileFilterOpen(false)}
-                >
+                <Button variant="outline" onClick={resetFilters}>
+                  Clear All
+                </Button>
+                <Button variant="ghost" onClick={() => setMobileFilterOpen(false)}>
                   <X />
                 </Button>
               </div>
             </div>
-            <FilterContent
-              selectedCategories={selectedCategories}
-              setSelectedCategories={setSelectedCategories}
-              handleCategoryChange={handleCategoryChange}
-              priceRange={priceRange}
-              setPriceRange={handlePriceRangeChange}
-              searchTerm={searchTerm}
-              setSearchTerm={debouncedSearch}
-              resetFilters={resetFilters}
-              isMobile
-              activeFilterCount={activeFilterCount}
-            />
+
+            {/* Categories */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Categories</h3>
+              <div className="flex flex-col gap-2">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    className={`flex items-center gap-2 rounded-md p-2 transition-colors ${selectedCategories.includes(category.id)
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-gray-100"
+                      }`}
+                    onClick={() => handleCategoryChange(category.id)}
+                    aria-pressed={selectedCategories.includes(category.id)}
+                    type="button"
+                  >
+                    <span role="img" aria-label={category.label}>
+                      {category.icon}
+                    </span>
+                    <span>{category.label}</span>
+                    <Checkbox
+                      checked={selectedCategories.includes(category.id)}
+                      aria-readonly
+                      className="ml-auto h-4 w-4"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Range */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Price Range</h3>
+              <div className="flex flex-col gap-2">
+                {priceRanges.map((range) => (
+                  <button
+                    key={range.label}
+                    onClick={() => handlePriceRangeChange(range.value as [number, number])}
+                    className={`flex items-center w-full p-2 rounded-lg transition-colors ${priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-gray-100"
+                      }`}
+                    aria-pressed={
+                      priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
+                    }
+                    type="button"
+                  >
+                    <span className="text-sm">{range.label}</span>
+                    <Checkbox
+                      id={range.label}
+                      checked={
+                        priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
+                      }
+                      className="ml-auto h-4 w-4"
+                      aria-readonly
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
-        <aside className="hidden md:block w-1/4">
-          <div className="bg-gray-50 p-6 rounded-xl shadow-sm border sticky top-4">
-            <FilterContent
-              selectedCategories={selectedCategories}
-              setSelectedCategories={setSelectedCategories}
-              handleCategoryChange={handleCategoryChange}
-              priceRange={priceRange}
-              setPriceRange={handlePriceRangeChange}
-              searchTerm={searchTerm}
-              setSearchTerm={debouncedSearch}
-              resetFilters={resetFilters}
-              activeFilterCount={activeFilterCount}
-            />
-          </div>
-        </aside>
-
-        <main className="w-full md:w-3/4">
-          <div className="mb-6 flex justify-between items-center">
-            <p className="text-sm text-gray-500">
-              {filteredProducts.length} products found
-            </p>
-            {activeFilterCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={resetFilters}
-                className="text-primary"
-              >
-                Clear all filters
-              </Button>
-            )}
+        {/* Desktop Filters */}
+        <div className="hidden md:block w-64 sticky top-24 h-fit border rounded-md p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Filters</h3>
+            <Button variant="outline" size="sm" onClick={resetFilters}>
+              Clear All
+            </Button>
           </div>
 
-          {filterLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, index) => (
-                <ProductCardSkeleton key={index} />
+          {/* Categories */}
+          <div className="mb-6">
+            <h4 className="font-semibold mb-2">Categories</h4>
+            <div className="flex flex-col gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  className={`flex items-center gap-2 rounded-md p-2 transition-colors ${selectedCategories.includes(category.id)
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-gray-100"
+                    }`}
+                  onClick={() => handleCategoryChange(category.id)}
+                  aria-pressed={selectedCategories.includes(category.id)}
+                  type="button"
+                >
+                  <span role="img" aria-label={category.label}>
+                    {category.icon}
+                  </span>
+                  <span>{category.label}</span>
+                  <Checkbox
+                    checked={selectedCategories.includes(category.id)}
+                    aria-readonly
+                    className="ml-auto h-4 w-4"
+                  />
+                </button>
               ))}
             </div>
-          ) : (
-            <>
-              {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProducts.map((product) => (
-                    <Product product={product} key={product.id} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <Search className="w-12 h-12 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No products found
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Try adjusting your search or filter criteria
-                  </p>
-                  <Button onClick={resetFilters}>Reset filters</Button>
-                </div>
-              )}
-            </>
-          )}
-        </main>
+          </div>
+
+          {/* Price Range */}
+          <div>
+            <h4 className="font-semibold mb-2">Price Range</h4>
+            <div className="flex flex-col gap-2">
+              {priceRanges.map((range) => (
+                <button
+                  key={range.label}
+                  onClick={() => handlePriceRangeChange(range.value as [number, number])}
+                  className={`flex items-center w-full p-2 rounded-lg transition-colors ${priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-gray-100"
+                    }`}
+                  aria-pressed={
+                    priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
+                  }
+                  type="button"
+                >
+                  <span className="text-sm">{range.label}</span>
+                  <Checkbox
+                    id={range.label}
+                    checked={
+                      priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
+                    }
+                    className="ml-auto h-4 w-4"
+                    aria-readonly
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Products grid */}
+        <div className="flex-1">
+          {/* Search input */}
+          <div className="mb-6 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search products..."
+              className="pl-10"
+              onChange={(e) => debouncedSearch(e.target.value)}
+            />
+          </div>
+
+          {/* Products grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {filterLoading ? (
+              [...Array(limit)].map((_, idx) => <Skeleton key={idx} className="h-60 rounded-md" />)
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center col-span-full text-gray-500">
+                No products found matching your criteria.
+              </div>
+            ) : (
+              filteredProducts.map((product) => <Product key={product.id} product={product} />)
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="mt-8 flex justify-center items-center gap-4">
+        <Button
+          onClick={() => {
+            setCursor(null);
+            setProducts([]);
+          }}
+          disabled={!cursor || filterLoading}
+          variant="outline"
+        >
+          Reset
+        </Button>
+        <Button
+          onClick={handleNext}
+          disabled={!hasMore || filterLoading}
+          variant="outline"
+        >
+          Load More
+        </Button>
       </div>
     </div>
-  );
-}
-
-function FilterContent({
-  selectedCategories,
-  setSelectedCategories,
-  handleCategoryChange,
-  priceRange,
-  setPriceRange,
-  searchTerm,
-  setSearchTerm,
-  resetFilters,
-  isMobile = false,
-  activeFilterCount
-}: FilterContentProps) {
-  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-
-  useEffect(() => {
-    setLocalSearchTerm(searchTerm);
-  }, [searchTerm]);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalSearchTerm(e.target.value);
-    setSearchTerm(e.target.value);
-  };
-
-  return (
-    <>
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            id="search"
-            placeholder="Search t-shirts..."
-            value={localSearchTerm}
-            onChange={handleSearchChange}
-            className="w-full pl-9"
-          />
-          {localSearchTerm && (
-            <button
-              onClick={() => {
-                setLocalSearchTerm("");
-                setSearchTerm("");
-              }}
-              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <h3 className="text-lg font-medium mb-3 flex items-center justify-between">
-          <span>Categories</span>
-          {selectedCategories.length > 0 && (
-            <button
-              onClick={() => setSelectedCategories([])}
-              className="text-sm font-normal text-primary hover:underline"
-            >
-              Clear
-            </button>
-          )}
-        </h3>
-        <div className="space-y-2">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => handleCategoryChange(category.id)}
-              className={`flex items-center w-full p-2 rounded-lg transition-colors ${selectedCategories.includes(category.id)
-                ? "bg-primary/10 text-primary"
-                : "hover:bg-gray-100"
-                }`}
-            >
-              <span className="mr-3 text-lg">{category.icon}</span>
-              <span className="text-sm">{category.label}</span>
-              <Checkbox
-                id={category.id}
-                checked={selectedCategories.includes(category.id)}
-                className="ml-auto h-4 w-4"
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <h3 className="text-lg font-medium mb-3">Price Range</h3>
-        <div className="space-y-3">
-          {priceRanges.map((range) => (
-            <button
-              key={range.label}
-              onClick={() => setPriceRange(range.value as [number, number])}
-              className={`flex items-center w-full p-2 rounded-lg transition-colors ${priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
-                ? "bg-primary/10 text-primary"
-                : "hover:bg-gray-100"
-                }`}
-            >
-              <span className="text-sm">{range.label}</span>
-              {priceRange[0] === range.value[0] && priceRange[1] === range.value[1] && (
-                <Checkbox checked className="ml-auto h-4 w-4" />
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="mt-4">
-
-
-        </div>
-      </div>
-
-      {activeFilterCount > 0 && !isMobile && (
-        <Button
-          onClick={resetFilters}
-          variant="outline"
-          className="w-full"
-        >
-          Reset Filters
-        </Button>
-      )}
-    </>
   );
 }
 
 function ProductsPageSkeleton() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center mb-8">
-        <Link
-          href="/"
-          className="flex items-center text-sm md:text-base text-primary hover:text-primary-dark transition-colors"
-        >
-          <ArrowLeft className="mr-2" />
-          Back to Home
-        </Link>
-        <Skeleton className="h-8 w-48 ml-auto" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[...Array(9)].map((_, i) => (
+          <Skeleton key={i} className="h-60 rounded-md" />
+        ))}
       </div>
-      <div className="flex flex-col md:flex-row gap-8">
-        <aside className="w-full md:w-1/4">
-          <div className="bg-gray-100 p-6 rounded-lg shadow-md sticky top-4">
-            <Skeleton className="h-6 w-24 mb-4" />
-            <div className="mb-6">
-              <Skeleton className="h-4 w-16 mb-2" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="mb-6">
-              <Skeleton className="h-5 w-24 mb-2" />
-              {[1, 2, 3, 4].map((_, index) => (
-                <div key={index} className="flex items-center mb-2">
-                  <Skeleton className="h-4 w-4 mr-2" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              ))}
-            </div>
-            <div className="mb-6">
-              <Skeleton className="h-5 w-24 mb-2" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <div className="flex justify-between">
-                <Skeleton className="h-4 w-8" />
-                <Skeleton className="h-4 w-8" />
-              </div>
-            </div>
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </aside>
-        <main className="w-full md:w-3/4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, index) => (
-              <ProductCardSkeleton key={index} />
-            ))}
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
-
-function ProductCardSkeleton() {
-  return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border">
-      <Skeleton className="h-60 w-full mb-4 rounded-lg" />
-      <Skeleton className="h-6 w-3/4 mb-2" />
-      <Skeleton className="h-4 w-1/2 mb-4" />
-      <Skeleton className="h-10 w-full rounded-md" />
     </div>
   );
 }

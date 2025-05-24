@@ -6,12 +6,9 @@ import Credentials from "next-auth/providers/credentials";
 import { getUserByEmail } from "./lib/helpers/authHelper";
 
 export default {
+  trustHost: true,
   providers: [
     Credentials({
-      //   credentials: {
-      //     email: {},
-      //     password: {}
-      //   },
       async authorize(credentials) {
         const validatedFields = LoginSchema.safeParse(credentials);
 

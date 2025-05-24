@@ -1,8 +1,8 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from "./product";
-import { Loader } from "./Loader"
+
 const tabs = [
   { id: "casual", label: "Casual" },
   { id: "graphic", label: "Graphic" },
@@ -11,7 +11,7 @@ const tabs = [
   { id: "limited_edition", label: "Limited" },
 ];
 
-interface Product {
+interface ProductType {
   id: string;
   title: string;
   description: string;
@@ -26,8 +26,6 @@ interface Product {
   updatedAt: string;
 }
 
-
-
 const ProductCardSkeleton = () => (
   <div className="w-full">
     <div className="aspect-square bg-gray-100 rounded-md animate-pulse" />
@@ -37,36 +35,30 @@ const ProductCardSkeleton = () => (
   </div>
 );
 
-function PopularProducts() {
+interface PopularProductsProps {
+  initialData: Record<string, ProductType[]>;
+}
+
+const PopularProducts: React.FC<PopularProductsProps> = ({ initialData }) => {
   const [activeTab, setActiveTab] = useState(tabs[0].id);
-  const [data, setData] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [data, setData] = useState<ProductType[]>(initialData[activeTab]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`/api/products/${activeTab}`);
-        if (!response.ok) throw new Error("Failed to fetch products");
-        const products = await response.json();
-        setData(products);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setData(initialData[activeTab] || []);
+      setLoading(false);
+    }, 300); // short delay to show skeleton
 
-    fetchProducts();
-  }, [activeTab]);
+    return () => clearTimeout(timer);
+  }, [activeTab, initialData]);
 
   return (
     <div className="py-10">
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold">
-            Popular Products
-          </h2>
+          <h2 className="text-2xl font-bold">Popular Products</h2>
         </div>
 
         <div className="flex justify-center mb-8">
@@ -103,20 +95,18 @@ function PopularProducts() {
             transition={{ duration: 0.2 }}
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
           >
-            {loading ? (
-              <div className="w-full col-span-full flex justify-center items-center min-h-[200px]">
-                <Loader />
-              </div>
-            ) : (
-              data.map((product) => (
-                <Product key={product.id} product={product} />
+            {loading
+              ? Array.from({ length: 5 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
               ))
-            )}
+              : data.map((product) => (
+                <Product key={product.id} product={product} />
+              ))}
           </motion.div>
         </AnimatePresence>
       </div>
     </div>
   );
-}
+};
 
 export default PopularProducts;
