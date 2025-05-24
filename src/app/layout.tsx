@@ -31,17 +31,16 @@ export default async function RootLayout({
 
           <Navbar user={session?.user!} cart={cart} />
           <NextTopLoader
-            color="#9E7AFF"
+            color="#1F2937" // Tailwind's gray-900 (bg-gray-900)
             initialPosition={0.08}
             crawlSpeed={200}
             height={3}
             crawl={true}
-            showSpinner={true}
+            showSpinner={false} // Disabled spinner for minimal design
             easing="ease"
             speed={200}
-            shadow="0 0 10px #9E7AFF,0 0 5px #9E7AFF"
-            template='<div class="bar" role="bar"><div class="peg"></div></div> 
-  <div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'
+            shadow="0 0 5px #D1D5DB, 0 0 2px #D1D5DB" // Subtle grayscale shadow (gray-300)
+            template='<div class="bar" role="bar"><div class="peg"></div></div>'
             zIndex={1600}
             showAtBottom={false}
           />

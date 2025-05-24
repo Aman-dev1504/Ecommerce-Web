@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React from 'react';
 import { motion } from "framer-motion";
 import { ShieldCheck, Truck, Clock, LucideIcon } from 'lucide-react';
@@ -10,30 +10,37 @@ interface FeatureProps {
   delay: number;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
 const Feature: React.FC<FeatureProps> = ({ icon: Icon, title, description, delay }) => (
   <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.4, delay }}
-    className="flex flex-col items-center p-6 text-center group"
+    variants={itemVariants}
+    className="flex flex-col items-center p-6 text-center"
   >
-    {/* Icon Container with effects */}
-    <div className="relative mb-6 rounded-full bg-purple-50 p-4 transition-transform group-hover:scale-110 group-hover:shadow-lg shadow-sm">
-      <div className="absolute inset-0 bg-purple-200 rounded-full blur-lg opacity-50 group-hover:blur-xl group-hover:opacity-70 transition-all duration-300" />
-      <Icon className="w-8 h-8 text-purple-600 relative z-10" strokeWidth={1.5} />
-    </div>
+    {/* Icon */}
+    <Icon className="w-8 h-8 text-gray-900 mb-4" strokeWidth={1.5} />
 
     {/* Title and Description */}
-    <h3 className="text-lg font-medium text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
+    <h3 className="text-lg font-medium text-gray-900 mb-2">
       {title}
     </h3>
-    <p className="text-sm text-gray-600 max-w-[250px] group-hover:text-gray-800 transition-colors">
+    <p className="text-sm text-gray-600 max-w-[250px]">
       {description}
     </p>
-
-    {/* Border Effect */}
-    <div className="absolute inset-0 border-2 border-transparent rounded-xl group-hover:border-purple-500 transition-all duration-300"></div>
   </motion.div>
 );
 
@@ -57,21 +64,43 @@ const Features: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 bg-white border-b">
-      <div className="container mx-auto px-4">
+    <section className="relative bg-white py-12 sm:py-16 border-b">
+      {/* Noise Gradient Blurred Background */}
+      <div className="absolute inset-0">
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-gray-100 to-purple-100 opacity-50"
+          style={{
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            backgroundSize: '200px 200px',
+          }}
+        />
+      </div>
+
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 md:px-8">
         <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          className="text-center mb-8 sm:mb-12"
+          variants={itemVariants}
+          initial="hidden"
+          animate="visible"
         >
-          <h2 className="text-2xl font-medium text-gray-900">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
             The TeeWorld Difference
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto cursor-grab">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {features.map((feature, index) => (
             <Feature
               key={index}
@@ -81,7 +110,7 @@ const Features: React.FC = () => {
               delay={index * 0.1}
             />
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
