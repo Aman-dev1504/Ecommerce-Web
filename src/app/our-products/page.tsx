@@ -15,7 +15,7 @@ interface Product {
   updatedAt: string;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 export default async function OurProducts() {
   const res = await fetch(`${baseUrl}/api/products?limit=9`, {
