@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from "./product";
 
@@ -41,18 +41,33 @@ interface PopularProductsProps {
 
 const PopularProducts: React.FC<PopularProductsProps> = ({ initialData }) => {
   const [activeTab, setActiveTab] = useState(tabs[0].id);
-  const [data, setData] = useState<ProductType[]>(initialData[activeTab]);
-  const [loading, setLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    setLoading(true);
+  // Memoize the current tab's products to prevent unnecessary re-renders
+  const currentProducts = useMemo(() => {
+    return initialData[activeTab] || [];
+  }, [activeTab, initialData]);
+
+  // Smooth tab switching with animation delay
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const handleTabChange = useCallback((tabId: string) => {
+    if (tabId === activeTab) return;
+
+    setIsTransitioning(true);
+    setActiveTab(tabId);
+
+    // Match animation duration with the motion component
     const timer = setTimeout(() => {
-      setData(initialData[activeTab] || []);
-      setLoading(false);
-    }, 300); // short delay to show skeleton
+      setIsTransitioning(false);
+    }, 200);
 
     return () => clearTimeout(timer);
-  }, [activeTab, initialData]);
+  }, [activeTab]);
+
+  // Pre-render skeleton array to avoid creating new arrays on each render
+  const skeletons = useMemo(() =>
+    Array.from({ length: 5 }).map((_, i) => <ProductCardSkeleton key={`skeleton-${i}`} />)
+    , []);
 
   return (
     <div className="py-10">
@@ -66,12 +81,14 @@ const PopularProducts: React.FC<PopularProductsProps> = ({ initialData }) => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`
                   px-3 py-1 rounded-md text-xs
-                  transition-all duration-300 relative
+                  transition-colors duration-300 relative
                   ${activeTab === tab.id ? 'text-white' : 'text-black hover:text-black/70'}
                 `}
+                disabled={isTransitioning}
+                aria-disabled={isTransitioning}
               >
                 {activeTab === tab.id && (
                   <motion.div
@@ -95,13 +112,11 @@ const PopularProducts: React.FC<PopularProductsProps> = ({ initialData }) => {
             transition={{ duration: 0.2 }}
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
           >
-            {loading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))
-              : data.map((product) => (
+            {isTransitioning ? skeletons : (
+              currentProducts.map((product) => (
                 <Product key={product.id} product={product} />
-              ))}
+              ))
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -109,4 +124,4 @@ const PopularProducts: React.FC<PopularProductsProps> = ({ initialData }) => {
   );
 };
 
-export default PopularProducts;
+export default React.memo(PopularProducts);
