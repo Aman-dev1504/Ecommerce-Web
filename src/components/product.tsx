@@ -3,14 +3,25 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { Product } from "@prisma/client";
+
 import { useState } from "react";
 
-interface Props {
-  product: Product;
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  imageUrls: string[];
+  category: string;
+  sizes: string[];
+  gender: string;
+  featured: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export function Product({ product }: Props) {
+export function Product(product: Product) {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
