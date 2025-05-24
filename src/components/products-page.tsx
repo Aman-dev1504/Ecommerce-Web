@@ -39,11 +39,15 @@ const priceRanges = [
   { label: "$100 - $150", value: [100, 150] },
   { label: "Over $150", value: [150, 1000] },
 ];
+interface ProductsPageProps {
+  initialProducts: Product[];
+}
 
-export function ProductsPage() {
-  const limit = 9; // number of items per page
+export function ProductsPage({ initialProducts }: ProductsPageProps) {
+
+  const limit = 9;
   const [cursor, setCursor] = useState<string | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
@@ -56,6 +60,7 @@ export function ProductsPage() {
 
   // Fetch products with pagination
   const fetchProducts = useCallback(async () => {
+    if (!cursor) return;
     setLoading(true);
     setError(null);
 
@@ -236,8 +241,8 @@ export function ProductsPage() {
                   <button
                     key={category.id}
                     className={`flex items-center gap-2 rounded-md p-2 transition-colors ${selectedCategories.includes(category.id)
-                        ? "bg-primary/10 text-primary"
-                        : "hover:bg-gray-100"
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-gray-100"
                       }`}
                     onClick={() => handleCategoryChange(category.id)}
                     aria-pressed={selectedCategories.includes(category.id)}
@@ -266,8 +271,8 @@ export function ProductsPage() {
                     key={range.label}
                     onClick={() => handlePriceRangeChange(range.value as [number, number])}
                     className={`flex items-center w-full p-2 rounded-lg transition-colors ${priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
-                        ? "bg-primary/10 text-primary"
-                        : "hover:bg-gray-100"
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-gray-100"
                       }`}
                     aria-pressed={
                       priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
@@ -307,8 +312,8 @@ export function ProductsPage() {
                 <button
                   key={category.id}
                   className={`flex items-center gap-2 rounded-md p-2 transition-colors ${selectedCategories.includes(category.id)
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-gray-100"
+                    ? "bg-primary/10 text-primary"
+                    : "hover:bg-gray-100"
                     }`}
                   onClick={() => handleCategoryChange(category.id)}
                   aria-pressed={selectedCategories.includes(category.id)}
@@ -337,8 +342,8 @@ export function ProductsPage() {
                   key={range.label}
                   onClick={() => handlePriceRangeChange(range.value as [number, number])}
                   className={`flex items-center w-full p-2 rounded-lg transition-colors ${priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-gray-100"
+                    ? "bg-primary/10 text-primary"
+                    : "hover:bg-gray-100"
                     }`}
                   aria-pressed={
                     priceRange[0] === range.value[0] && priceRange[1] === range.value[1]
