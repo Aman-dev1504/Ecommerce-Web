@@ -34,21 +34,19 @@ export function LoginForm() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
-    setError('');
-    setSuccess('');
+  function onLoginSubmit(values: loginSchema) {
+    setError('')
+    setSuccess('')
 
     startTransition(() => {
       login(values)
         .then((data) => {
-          setError(data?.error);
-          setSuccess(data?.success);
+          setError(data?.error)
+          setSuccess(data?.success)
         })
-        .catch(() => {
-          setError("Something went wrong. Please try again.");
-        });
-    });
-  };
+    })
+
+  }
 
   return (
 
@@ -59,7 +57,7 @@ export function LoginForm() {
       showSocial
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onLoginSubmit)} className="space-y-6">
           <div className="space-y-4">
             <FormField
               control={form.control}
