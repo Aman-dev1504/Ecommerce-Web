@@ -20,8 +20,10 @@ interface Product {
   createdAt: string;
   updatedAt: string;
 }
-
-export function Product(product: Product) {
+interface ProductProps {
+  product: Product;
+}
+export function Product({ product }: ProductProps) {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
